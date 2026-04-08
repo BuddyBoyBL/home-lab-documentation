@@ -1,0 +1,25 @@
+# Asset List
+
+## Endpoints
+
+| Asset Name | Type | Role | User | Status |
+|---|---|---|---|---|
+| Dell OptiPlex 960 | Desktop PC | Mom's computer | Mom | Active |
+| Lenovo ThinkPad X1 Extreme Gen 2 | Laptop | Main personal computer | Ben | Active |
+| Dell Inspiron 660s | Desktop PC | Test computer | Ben | Active |
+| Lenovo IdeaPad Flex 5 14ALC7 | Laptop | Sister's computer | Sister | Active |
+
+## Network Devices
+
+| Asset Name | Type | Role | User | Status |
+|---|---|---|---|---|
+| Comcast/Xfinity Gateway | ISP Gateway | Main internet gateway | Household | Active |
+| Cisco SG300-52 | Managed Switch | Main switch connected to modem | Ben | Active |
+| Netgear WNDR3400v3 | Router | Test computer router | Ben | Active |
+
+## Printers
+
+| Asset Name | Type | Role | User | Status |
+|---|---|---|---|---|
+| Dell E515dw | Multifunction Printer | Main family printer | Family | Active |
+| HP OfficeJet Pro 8600 Premium | Multifunction Printer | Test printer | Ben | Testing |
