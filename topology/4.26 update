@@ -1,0 +1,43 @@
+# Home Lab Network Topology
+
+## Overview
+
+This home lab is designed to simulate a small enterprise-style IT and SOC environment while still supporting a normal household network. The topology separates trusted user devices, low-trust IoT systems, lab infrastructure, guest devices, and high-risk malware testing into distinct VLANs. This approach improves security, reduces lateral movement, and creates a controlled environment for learning enterprise networking, monitoring, and incident response.
+
+The network follows a layered design:
+
+- **Edge Layer:** Xfinity Gateway / Modem in bridge mode
+- **Security Layer:** pfSense firewall with Suricata IDS/IPS
+- **Core Layer:** Cisco Layer 3 switch for VLAN distribution
+- **Access Layer:** End-user devices, IoT devices, lab systems, and test environments
+
+This design allows centralized traffic control at the firewall while maintaining flexibility for segmentation, monitoring, and future expansion.
+
+---
+
+## Logical Topology
+
+```text
+                                           INTERNET
+                                               │
+                                 ┌──────────────────────────┐
+                                 │ Xfinity Gateway / Modem │
+                                 │ (Bridge Mode preferred) │
+                                 └────────────┬─────────────┘
+                                              │
+                                   WAN        │
+                              ┌───────────────▼───────────────┐
+                              │       pfSense Firewall        │
+                              │      + Suricata IDS/IPS       │
+                              └───────────────┬───────────────┘
+                                              │
+                                         LAN / TRUNK
+                                              │
+                              ┌───────────────▼───────────────┐
+                              │       Cisco L3 Switch         │
+                              │   VLANs / Inter-VLAN paths    │
+                              └──────┬────────┬────────┬──────┬────────┬────────┘
+                                     │        │        │      │        │
+                                 VLAN 10   VLAN 20  VLAN 25 VLAN 30 VLAN 40  VLAN 666
+                                Management   Home      IoT    Lab/SOC Guest    Malware
+                                   Admin    Trusted Untrusted Servers/Test Temp  Isolated
