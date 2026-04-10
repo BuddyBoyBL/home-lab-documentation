@@ -1,0 +1,137 @@
+                                           INTERNET
+                                               │
+                                 ┌──────────────────────────┐
+                                 │ Xfinity Gateway / Modem │
+                                 │ (Bridge Mode preferred) │
+                                 └────────────┬─────────────┘
+                                              │
+                                   WAN        │
+                              ┌───────────────▼───────────────┐
+                              │       pfSense Firewall        │
+                              │      + Suricata IDS/IPS       │
+                              └───────────────┬───────────────┘
+                                              │
+                                         LAN / TRUNK
+                                              │
+                              ┌───────────────▼───────────────┐
+                              │       Cisco L3 Switch         │
+                              │   VLANs / Inter-VLAN paths    │
+                              └──────┬────────┬────────┬──────┬────────┬────────┘
+                                     │        │        │      │        │
+                                     │        │        │      │        │
+                                 VLAN 10   VLAN 20  VLAN 25 VLAN 30 VLAN 40  VLAN 666
+                                Management   Home      IoT    Lab/SOC Guest    Malware
+                                   Admin    Trusted Untrusted Servers/Test Temp  Isolated
+
+
+VLAN 10 — MANAGEMENT
+────────────────────────────────────────────────────────────────────────
+Purpose:
+- Administrative control plane
+
+Devices:
+- Your admin access
+- pfSense management interface
+- Cisco switch management interface
+
+Access idea:
+- Can manage other VLANs
+- Other VLANs should not initiate access here
+
+
+VLAN 20 — HOME
+────────────────────────────────────────────────────────────────────────
+Purpose:
+- Trusted daily-use household network
+
+Devices:
+- Mom's PC
+- Sister's laptop
+- Trusted personal devices
+- Your host laptop when using it normally
+
+Access idea:
+- Internet access allowed
+- No direct access to management
+- No access to malware zone
+- Limited access to lab only when needed
+
+
+VLAN 25 — IOT
+────────────────────────────────────────────────────────────────────────
+Purpose:
+- Low-trust smart devices
+
+Devices:
+- Smart TVs
+- Alexa
+- Smart bulbs
+- Smart air purifier
+- Smart light strip
+- Other internet-connected home gadgets
+
+Access idea:
+- Internet access allowed
+- Block access to Home VLAN by default
+- Block access to Management VLAN
+- Block access to Lab VLAN unless specifically required
+
+
+VLAN 30 — LAB / SOC
+────────────────────────────────────────────────────────────────────────
+Purpose:
+- Practice environment for IT, SOC, and server workflows
+
+Systems:
+- Splunk server
+- Windows Server / Active Directory
+- Jira
+- Kali Linux VM
+- OpenVAS
+- Test PC
+- Test printer
+- Test phone
+- Other lab VMs
+
+Access idea:
+- Internet access for updates/testing
+- Internal communication for logs and domain services
+- Restricted from Home VLAN unless explicitly allowed
+
+
+VLAN 40 — GUEST / TEST
+────────────────────────────────────────────────────────────────────────
+Purpose:
+- Temporary devices and non-trusted test access
+
+Devices:
+- Guest devices
+- Temporary phones/laptops
+- Quick test endpoints
+
+Access idea:
+- Internet only
+- No internal VLAN access
+
+
+VLAN 666 — MALWARE / HOT ZONE
+────────────────────────────────────────────────────────────────────────
+Purpose:
+- Quarantine zone for dangerous testing
+
+Systems:
+- Malware analysis VM
+- Unsafe exploit/testing VM
+
+Access idea:
+- No access to internal VLANs
+- No internet by default, or tightly controlled only if required
+- Heavily monitored
+
+             [Home VLAN] ----\
+                               \
+             [IoT VLAN] ------- > pfSense + Suricata ---> Splunk ---> Jira
+                               /
+             [Lab VLAN] -------/
+
+             [Malware VLAN] --> tightly isolated, monitored separately
