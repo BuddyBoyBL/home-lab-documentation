@@ -8,22 +8,26 @@ This home lab is designed to simulate a small enterprise environment with segmen
 ## Physical Topology
 
 ```text
-                    [ Internet / Xfinity ]
-                            |
-                            |
-                 [ Xfinity Gateway - Bridge Mode ]
-                            |
-                            |
-               [ Hardware Firewall - pfSense/OPNsense ]
-                            |
-                            |
-                    [ Layer 3 Managed Switch ]
-             _____________|_____________|_____________
-            |             |             |             |
-            |             |             |             |
-       [Mgmt VLAN]    [Corp VLAN]    [IoT VLAN]   [Sandbox VLAN]
-            |             |             |             |
-            |             |             |             |
-   Admin Laptop      Family PCs      Printers,      Test PC /
-   Nessus Scanner    Domain PCs      IoT Devices    Malware VMs
-                                      APs
+                                           INTERNET
+                                               │
+                                 ┌──────────────────────────┐
+                                 │ Xfinity Gateway / Modem │
+                                 │ (Bridge Mode preferred) │
+                                 └────────────┬─────────────┘
+                                              │
+                                   WAN        │
+                              ┌───────────────▼───────────────┐
+                              │       pfSense Firewall        │
+                              │      + Suricata IDS/IPS       │
+                              └───────────────┬───────────────┘
+                                              │
+                                         LAN / TRUNK
+                                              │
+                              ┌───────────────▼───────────────┐
+                              │       Cisco L3 Switch         │
+                              │   VLANs / Inter-VLAN paths    │
+                              └──────┬────────┬────────┬──────┬────────┬────────┘
+                                     │        │        │      │        │
+                                 VLAN 10   VLAN 20  VLAN 25 VLAN 30 VLAN 40  VLAN 666
+                                Management   Home      IoT    Lab/SOC Guest    Malware
+                                   Admin    Trusted Untrusted Servers/Test Temp  Isolated
