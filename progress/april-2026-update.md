@@ -1,58 +1,36 @@
-# Progress Entry: Topology Adjustment and Test PC Integration
+# Progress Entry: Physical Layer Standardization & Topology Optimization
 
 ## Date
-April 2026
+April 11, 2026
 
 ## Summary
-I made additional progress on my home lab build and clarified part of the physical network layout. After reviewing the setup more closely, I realized that my test PC needs to be physically connected directly to the switch instead of relying on the router path I had originally considered.
+Executed a strategic adjustment to the physical network layout. After a technical review of the traffic flow, the Test PC was re-routed to connect directly to the **Cisco L3 Switch** rather than utilizing a transit path through the consumer-grade router. This ensures maximum Layer 2 visibility and eliminates potential routing bottlenecks.
 
-## Physical Connectivity Update
-- Determined that I need a **100 ft Ethernet cable** to connect the test PC to the switch
-- Measured the required distance at approximately **78 ft**
-- Confirmed that a 100 ft cable will provide enough length with some extra slack for cable routing and flexibility
+## Physical Layer Specifications
+* **Media Procured**: 100 ft Ultra Clarity Cat 6 Ethernet.
+* **Standards Compliance**: Rated for 10Gbps / 550MHz; Outdoor/Indoor durability.
+* **Path Validation**: Measured a ~78 ft required run. Staying well within the **100-meter (328 ft) limit** for TIA/EIA-568 Ethernet standards ensures zero signal degradation.
+* **Status**: Procurement complete; physical deployment pending.
 
-## Topology Change
-Because of this adjustment, I need to update my network topology documentation.
+## Architectural Rationale & Topology Shift
+The previous design relied on a router-intermediated path for the test environment. The updated plan bypasses the router for the following technical reasons:
 
-### Previous Idea
-- Switch connected to router
-- Router used as part of the path for the test environment
+1. **Layer 2 Observability**: Direct switch connectivity allows for the implementation of **SPAN/Mirror ports**. This is critical for capturing raw packet data from the Test PC for ingestion into **Suricata** and **Wireshark**.
+2. **Security & Segmentation**: Direct connection to the Cisco switch enables the application of **VLAN 30 (Lab/SOC)** port-level ACLs and MAC-based 'sticky' security.
+3. **Repurposed Hardware**: The existing router will be transitioned to **Access Point (AP) mode** to provide isolated guest Wi-Fi, removing it from the primary wired data path.
 
-### Updated Plan
-- **Test PC will connect directly to the switch**
-- **Test printer will be physically connected to the test PC**
-- **Router will now be repurposed for guest Wi-Fi access on the test network**
 
-This creates a cleaner separation between the wired test environment and the guest wireless portion of the lab.
 
-## Test PC Status
-The test PC has already been partially prepared for lab use.
-
-### Installed / Configured
-- Windows 10 Pro
-- Wireshark
-- Sysmon
-- Splunk Universal Forwarder
-- Splunk account preparation in progress / accounted for
-
-## Documentation Status
-- Cleaned up the topology design
-- Still need to **update the actual topology documentation and diagrams** so they reflect the new direct-switch connection model
-
-## Why This Matters
-This change improves the realism and structure of the lab by making the test machine part of the wired environment directly, rather than placing unnecessary dependency on the router. It also helps better separate:
-- wired test systems
-- guest wireless access
-- future monitoring and traffic analysis
+## Endpoint Integration Status (Test PC)
+The Test PC (Windows 10 Pro) is currently in the staging phase:
+* **Protocol Analysis**: Wireshark installed and verified.
+* **Endpoint Telemetry**: **Sysmon** deployed with a custom configuration for process and network event tracking.
+* **Log Aggregation**: **Splunk Universal Forwarder** installed; service account preparation is underway to facilitate log delivery to the indexer on VLAN 10.
 
 ## Next Steps
-- Purchase and install the 100 ft Ethernet cable
-- Physically connect the test PC to the switch
-- Connect the test printer to the test PC
-- Update topology documentation and diagrams
-- Continue configuring monitoring and logging tools on the test system
+* **Physical Deployment**: Finalize the 100 ft cable run and verify link integrity (1Gbps auto-negotiation).
+* **Peripheral Integration**: Local connection of the test printer to the Test PC for endpoint-based print logging.
+* **Documentation**: Update the master topology diagrams to reflect the direct-to-core connection model.
 
-## Key Takeaways
-- Physical layout matters just as much as logical design
-- Measuring distance before purchasing cable helped avoid guesswork
-- Simplifying the topology makes the lab easier to document and troubleshoot
+---
+> **Engineering Note**: This change prioritizes "Visibility First" architecture. By moving the test node to the switch, we ensure that every packet generated by the "attacker" or "victim" machines is visible to our security stack before it ever reaches a routing boundary.
