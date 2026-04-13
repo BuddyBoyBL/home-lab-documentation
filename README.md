@@ -19,7 +19,29 @@ This repository documents my personal home lab environment designed to simulate 
 - Splunk SIEM
 
 ## Network Architecture
-(Insert diagram here)
+                                           INTERNET
+                                               │
+                                 ┌──────────────────────────┐
+                                 │ Xfinity Gateway / Modem │
+                                 │ (Bridge Mode preferred) │
+                                 └────────────┬─────────────┘
+                                              │
+                                   WAN        │
+                              ┌───────────────▼───────────────┐
+                              │       pfSense Firewall        │
+                              │      + Suricata IDS/IPS       │
+                              └───────────────┬───────────────┘
+                                              │
+                                         LAN / TRUNK
+                                              │
+                              ┌───────────────▼───────────────┐
+                              │       Cisco L3 Switch         │
+                              │   VLANs / Inter-VLAN paths    │
+                              └──────┬────────┬────────┬──────┬────────┬────────┘
+                                     │        │        │      │        │
+                                 VLAN 10   VLAN 20  VLAN 25 VLAN 30 VLAN 40  VLAN 666
+                                Management   Home      IoT    Lab/SOC Guest    Malware
+                                   Admin    Trusted Untrusted Servers/Test Temp  Isolated
 
 ## VLAN Structure
 - VLAN 10 – Management
