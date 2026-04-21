@@ -11,7 +11,6 @@ This repository documents my personal home lab environment designed to simulate 
 
 ## Environment
 - Comcast Modem (Bridge Mode Planned)
-- Netgear Router
 - Layer 3 Switch
 - Windows 10 Pro Host (Hyper-V)
 - Kali Linux VM
