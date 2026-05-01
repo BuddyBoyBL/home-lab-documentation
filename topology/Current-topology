@@ -1,43 +1,224 @@
-# Home Lab Network Topology
+INTERNET
+   │
+┌──────────────────────────┐
+│ Xfinity Gateway / Modem │
+│ (Legacy Network Active) │
+└────────────┬─────────────┘
+             │
+   Ethernet Run (Upstairs → Basement)
+             │
+        WAN  │
+┌────────────▼─────────────┐
+│     pfSense Firewall     │
+│   (Qotom Mini PC)        │
+│   VLAN Gateways:         │
+│   99 / 60 / 30 / 20 / 40 / 50 │
+└────────────┬─────────────┘
+             │
+        LAN / TRUNK
+             │
+┌────────────▼─────────────┐
+│    Cisco L2 Switch       │
+│   VLAN Distribution      │
+└──────┬──────┬──────┬─────┬──────┬──────┘
+       │      │      │     │      │
+       │      │      │     │      │
+   VLAN 99 VLAN 60 VLAN 30 VLAN 20 VLAN 40 VLAN 50
+  Management Servers  Home   Test    IoT   Sandbox
+   Control   Core     Users  Lab     Low   Isolated
+             Services         Clients Trust
 
-## Overview
+VLAN 99 — MANAGEMENT
 
-This home lab is designed to simulate a small enterprise-style IT and SOC environment while still supporting a normal household network. The topology separates trusted user devices, low-trust IoT systems, lab infrastructure, guest devices, and high-risk malware testing into distinct VLANs. This approach improves security, reduces lateral movement, and creates a controlled environment for learning enterprise networking, monitoring, and incident response.
+────────────────────────────────────────────────────────────────────────
+Subnet: 192.168.99.0/24
+Gateway: 192.168.99.1
 
-The network follows a layered design:
+Purpose:
 
-- **Edge Layer:** Xfinity Gateway / Modem in bridge mode
-- **Security Layer:** pfSense firewall with Suricata IDS/IPS
-- **Core Layer:** Cisco Layer 3 switch for VLAN distribution
-- **Access Layer:** End-user devices, IoT devices, lab systems, and test environments
+Administrative control plane
 
-This design allows centralized traffic control at the firewall while maintaining flexibility for segmentation, monitoring, and future expansion.
+Devices:
 
----
+Admin laptop (192.168.99.10)
+Cisco switch (192.168.99.2)
+pfSense management interface
 
-## Logical Topology
+Access idea:
 
-```text
-                                           INTERNET
-                                               │
-                                 ┌──────────────────────────┐
-                                 │ Xfinity Gateway / Modem │
-                                 │ (Bridge Mode preferred) │
-                                 └────────────┬─────────────┘
-                                              │
-                                   WAN        │
-                              ┌───────────────▼───────────────┐
-                              │       pfSense Firewall        │
-                              │      + Suricata IDS/IPS       │
-                              └───────────────┬───────────────┘
-                                              │
-                                         LAN / TRUNK
-                                              │
-                              ┌───────────────▼───────────────┐
-                              │       Cisco L3 Switch         │
-                              │   VLANs / Inter-VLAN paths    │
-                              └──────┬────────┬────────┬──────┬────────┬────────┘
-                                     │        │        │      │        │
-                                 VLAN 10   VLAN 20  VLAN 25 VLAN 30 VLAN 40  VLAN 666
-                                Management   Home      IoT    Lab/SOC Guest    Malware
-                                   Admin    Trusted Untrusted Servers/Test Temp  Isolated
+Full administrative access to infrastructure
+Can access all VLANs when required
+No inbound access from other VLANs
+VLAN 60 — SERVERS
+
+────────────────────────────────────────────────────────────────────────
+Subnet: 192.168.60.0/24
+Gateway: 192.168.60.1
+
+Purpose:
+
+Core infrastructure and services
+
+Systems:
+
+Domain Controller (192.168.60.10)
+Splunk Server (192.168.60.20)
+QNAP NAS (192.168.60.30)
+
+Access idea:
+
+Accessible from management VLAN
+Provides services to lab VLAN
+No direct access from IoT or sandbox
+Limited exposure to home VLAN
+VLAN 30 — HOME NETWORK
+
+────────────────────────────────────────────────────────────────────────
+Subnet: 192.168.30.0/24
+Gateway: 192.168.30.1
+
+Purpose:
+
+Controlled household network (transition from legacy)
+
+Devices:
+
+TP-Link router (AP mode)
+Smart TV (temporary placement)
+Future migrated family devices
+
+Access idea:
+
+Internet access allowed
+No access to management VLAN
+No access to sandbox VLAN
+Limited access to servers only if needed
+VLAN 20 — TEST / LAB CLIENT NETWORK
+
+────────────────────────────────────────────────────────────────────────
+Subnet: 192.168.20.0/24
+Gateway: 192.168.20.1
+
+Purpose:
+
+Lab endpoint environment
+
+Devices:
+
+Test PC (Dell Inspiron)
+Windows Client VM
+Kali Linux VM
+Test printer
+Test phone (planned)
+
+Access idea:
+
+Internet access allowed (controlled)
+Access to server VLAN (AD, Splunk)
+No access to home VLAN
+No access to management VLAN
+VLAN 40 — IOT NETWORK
+
+────────────────────────────────────────────────────────────────────────
+Subnet: 192.168.40.0/24
+Gateway: 192.168.40.1
+
+Purpose:
+
+Low-trust smart devices
+
+Devices:
+
+Smart bulbs
+Air purifier
+Ring doorbell
+Wi-Fi extender
+IoT router/AP
+
+Access idea:
+
+Internet access only
+No access to internal VLANs
+Fully isolated from servers and management
+VLAN 50 — SANDBOX / MALWARE ZONE
+
+────────────────────────────────────────────────────────────────────────
+Subnet: 192.168.50.0/24
+Gateway: 192.168.50.1
+
+Purpose:
+
+High-risk testing environment
+
+Systems:
+
+Sandbox VM (planned)
+Malware analysis systems (future)
+
+Access idea:
+
+No access to any internal VLANs
+No internet initially
+Future: controlled fake internet (INetSim)
+Fully isolated and monitored
+TRAFFIC FLOW MODEL
+
+────────────────────────────────────────────────────────────────────────
+
+    [Home VLAN] --------\
+                         \
+    [IoT VLAN] ---------- > pfSense Firewall ---> Internet
+                         /
+    [Lab VLAN] ----------/
+
+    [Servers VLAN] ---> provides services (AD, Splunk, NAS)
+
+    [Management VLAN] ---> controls all infrastructure
+
+    [Sandbox VLAN] ---> isolated (no trust, no access)
+VM / INFRASTRUCTURE LAYER
+
+────────────────────────────────────────────────────────────────────────
+
+Host: Admin Laptop (Hypervisor)
+
+Runs:
+
+Domain Controller (VLAN 60)
+Splunk Server (VLAN 60)
+Windows Client VM (VLAN 20)
+Kali Linux VM (VLAN 20)
+Future Sandbox VM (VLAN 50)
+CURRENT STATE NOTES
+
+────────────────────────────────────────────────────────────────────────
+
+VLANs configured on pfSense
+Basic firewall rules applied
+Cisco switch being reconfigured
+Connectivity testing in progress
+Legacy network (192.168.1.0/24) still active upstairs
+Smart TV temporarily placed on home VLAN for usability
+DESIGN PRINCIPLES
+
+────────────────────────────────────────────────────────────────────────
+
+Segmentation by trust level
+Default deny between VLANs
+Centralized control via pfSense
+Servers isolated from clients
+IoT treated as untrusted
+Sandbox treated as hostile
+SUMMARY
+
+────────────────────────────────────────────────────────────────────────
+
+This topology represents a segmented homelab architecture with:
+
+Dedicated firewall (pfSense)
+VLAN-based network segmentation
+Separate server, client, and IoT networks
+Centralized logging and identity services
+Isolated sandbox environment (planned)
+
+This is the current build-state topology and will evolve as connectivity and firewall policies are finalized.
