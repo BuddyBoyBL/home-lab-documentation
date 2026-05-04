@@ -49,6 +49,9 @@ Plaintext
                              VLAN 10   VLAN 20  VLAN 25 VLAN 30 VLAN 40  VLAN 666
                             Management   Home      IoT    Lab/SOC Guest    Malware
                                Admin    Trusted Untrusted Servers/Test Temp  Isolated
+
+
+
 Security Zone Definitions
 VLAN 10 (Management): Critical infrastructure access; restricted to Admin physical ports.
 
