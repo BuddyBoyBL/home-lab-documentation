@@ -1,0 +1,80 @@
+# Homelab Network IP & VLAN Plan
+
+## Overview
+This document defines the current IP addressing scheme and VLAN segmentation for the homelab environment. The goal is to maintain clear separation between network zones while enabling controlled communication via firewall rules.
+
+---
+
+## VLAN & Subnet Allocation
+
+| VLAN Name   | Subnet              | Gateway           | Purpose |
+|------------|--------------------|-------------------|--------|
+| MGMT       | 192.168.99.0/24    | 192.168.99.1      | Admin systems (primary + backup admin machines) |
+| SERVERS    | 192.168.60.0/24    | 192.168.60.1      | Core infrastructure (AD, Splunk, NAS) |
+| TEST       | 192.168.20.0/24    | 192.168.20.1      | Test PC / controlled lab environment |
+| SANDBOX    | 192.168.50.0/24    | 192.168.50.1      | Malware testing / isolated environment |
+| HOME       | 192.168.30.0/24    | 192.168.30.1      | Personal + family devices |
+| IOT        | 192.168.40.0/24    | 192.168.40.1      | Smart devices / IoT router |
+| WAN        | 10.0.0.0/24        | 10.0.0.1          | Upstream ISP network |
+
+---
+
+## Server IP Assignments (SERVERS VLAN)
+
+| Device             | IP Address        | Description |
+|--------------------|------------------|------------|
+| Splunk Server      | 192.168.60.10     | Logging / SIEM |
+| Active Directory   | 192.168.60.20     | Domain services |
+| NAS Server         | 192.168.60.30     | Storage / backups |
+
+---
+
+## Test VLAN Devices
+
+| Device     | IP Address        | Description |
+|-----------|------------------|------------|
+| Test PC   | 192.168.20.x      | Security testing / controlled access |
+
+---
+
+## Sandbox VLAN
+
+| Device     | IP Address        | Description |
+|-----------|------------------|------------|
+| (Dynamic) | 192.168.50.x      | Malware / isolated test systems |
+
+---
+
+## Design Principles
+
+### 1. Segmentation
+Each VLAN represents a security zone:
+- **MGMT** = full administrative control
+- **SERVERS** = protected core infrastructure
+- **TEST** = controlled client environment
+- **HOME** = general user network
+- **IOT** = untrusted / restricted devices
+- **SANDBOX** = high-risk isolated environment
+
+---
+
+### 2. Least Privilege
+- No VLAN should communicate with another unless explicitly allowed
+- Access is granted **only for required services**
+
+---
+
+### 3. Traffic Flow Model
+
+```text
+MGMT → All VLANs (admin control)
+
+TEST → AD + Splunk + Internet
+
+HOME → Internet (+ limited IoT access later)
+
+IOT → Internet only (restricted)
+
+SERVERS → Limited outbound (updates only)
+
+SANDBOX → Isolated (no internal access)
