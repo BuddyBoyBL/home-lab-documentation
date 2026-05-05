@@ -1,0 +1,227 @@
+# Microsoft 365 / Entra ID Lab – U
+
+## Overview
+This lab documents hands-on practice with user lifecycle management, authentication issues, access control, and endpoint troubleshooting within a Microsoft 365 environment.
+
+Focus areas:
+- User onboarding
+- Authentication and password policies
+- Role-based access control
+- Remote Desktop access
+- Security best practices
+
+---
+
+# 1. User Onboarding Scenario
+
+## Description
+Created multiple users to simulate a real organization:
+- 5 General Users (Fruit Associates)
+- 3 Contractors
+- 2 Admins
+
+## Actions Taken
+- Created users in Entra ID
+- Assigned and removed licenses for testing
+- Configured roles based on least privilege
+- Forced password reset on first login
+
+## Key Learning
+User accounts must have:
+- Proper licensing
+- Correct role assignment
+- Verified login credentials
+
+---
+
+# 2. Login & Access Testing
+
+## Scenario
+Tested login behavior across:
+- Licensed users
+- Unlicensed users
+- Blocked users
+
+## Observations
+- Blocked users → cannot log in
+- Unlicensed users → can log in but apps fail
+- Licensed users → full access
+
+## Key Learning
+Authentication ≠ Authorization  
+A user can log in but still lack access due to licensing.
+
+---
+
+# 3. Password Policy Enforcement
+
+## Scenario
+User (Alicia) unable to set password:
+> Error: “Password too easy to guess”
+
+## Investigation
+- Confirmed password included user's name
+- Identified Entra banned password policy trigger
+
+## Resolution
+- Advised user to remove personal identifiers
+- User successfully set a compliant password
+
+## Key Learning
+Entra blocks:
+- User names
+- Company names
+- Common patterns
+
+---
+
+# 4. Custom Banned Password List
+
+## Configured Entries
+- cyberfrontiers
+- cyber
+- frontiers
+- admin
+- support
+- denver
+- cf
+
+## Purpose
+Prevent predictable password patterns such as:
+- CompanyName123!
+- Admin@Company
+
+## Key Learning
+Custom banned lists should focus on:
+- Organization-specific terms
+- Role-based words
+- Location identifiers
+
+---
+
+# 5. Privilege Escalation Workflow
+
+## Scenario
+User requested elevated permissions
+
+## Process
+1. Verified business need
+2. Requested approval from IT lead
+3. Granted temporary access
+4. Set time-bound removal
+
+## Key Learning
+- Never grant permanent elevation by default
+- Follow least privilege and approval chain
+
+---
+
+# 6. Offboarding Process
+
+## Steps Performed
+1. Block sign-in
+2. Reset password
+3. Revoke sessions
+4. Remove licenses
+5. Remove group memberships
+
+## Key Learning
+Offboarding is a **security process**, not just account cleanup.
+
+---
+
+# 7. Windows Device Join vs Registration
+
+## Issue
+User could not log into Windows with work account
+
+## Root Cause
+Device was:
+- Entra **Registered** ❌
+- Not Entra **Joined** ❌
+
+## Resolution
+- Reconfigured device using proper join method
+
+## Key Learning
+| State | Capability |
+|------|-----------|
+| Registered | App access only |
+| Joined | Full device login |
+
+---
+
+# 8. Remote Desktop Access Issue
+
+## Error
+> “User is not authorized to log in through Remote Desktop Services”
+
+## Root Cause
+User not in **Remote Desktop Users** group
+
+## Resolution
+- Added user to:
+  - Remote Desktop Users group
+
+## Key Learning
+RDP access is controlled locally, not by Entra alone.
+
+---
+
+# 9. RDP Security Best Practice
+
+## Incorrect Approach
+- Adding all users to RDP access ❌
+
+## Correct Approach
+- Limit access to:
+  - Admins
+  - IT staff
+- Use group-based assignment
+
+## Key Learning
+Follow **least privilege** to reduce attack surface.
+
+---
+
+# 10. Windows Hello PIN Policy
+
+## Observation
+Option exists to allow symbols in PIN
+
+## Decision
+- Do NOT enforce symbols universally
+- Enforce:
+  - Minimum length (6–8+)
+  - Strong passwords
+  - MFA
+
+## Key Learning
+PIN = device-level security  
+MFA + password policy = primary security controls
+
+---
+
+# 11. Key Concepts Reinforced
+
+- Authentication vs Authorization
+- Least Privilege Access
+- Role-Based Access Control (RBAC)
+- Identity vs Device Management
+- Local vs Cloud Permissions
+- Security vs Usability balance
+
+---
+
+# 12. Summary
+
+This lab simulated real-world Tier 1 IT scenarios including:
+- Account creation and onboarding
+- Password policy enforcement
+- Login troubleshooting
+- Permission management
+- Remote access configuration
+
+The exercises reinforced structured troubleshooting and security-first thinking aligned with enterprise environments.
+
+---
