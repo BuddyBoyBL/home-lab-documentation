@@ -1,0 +1,144 @@
+# Homelab Firewall Rules (Current State)
+
+## Overview
+This document defines the current firewall rules implemented in OPNsense.  
+Rules are organized by VLAN and follow a top-down evaluation model (first match wins).
+
+---
+
+## Global Notes
+
+- All rules are evaluated **top → bottom**
+- Implicit **deny all** at the end of each interface
+- Aliases are used for readability and scalability
+- Some rules are intentionally permissive and will be hardened later
+
+---
+
+## MGMT VLAN (192.168.99.0/24)
+
+**Purpose:** Administrative control plane
+
+| Priority | Action | Source     | Destination | Port | Description |
+|----------|--------|-----------|------------|------|------------|
+| 1 | PASS | MGMT_NET | ANY | ANY | Full admin access (temporary) |
+| 2 | PASS | MGMT_NET | WAN | ANY | Internet access for admin |
+
+---
+
+## TEST VLAN (192.168.20.0/24)
+
+**Purpose:** Controlled testing environment
+
+| Priority | Action | Source     | Destination      | Port            | Description |
+|----------|--------|-----------|-----------------|-----------------|------------|
+| 1 | PASS | TEST_NET | SPLUNK_SERVER | SPLUNK_PORT (9997) | Log forwarding |
+| 2 | PASS | TEST_NET | AD_SERVER     | AD_PORTS        | Domain services |
+| 3 | PASS | TEST_NET | WAN           | ANY             | Internet access |
+| - | DENY | TEST_NET | ANY           | ANY             | Implicit deny |
+
+---
+
+## HOME VLAN (192.168.30.0/24)
+
+**Purpose:** Personal / family devices
+
+| Priority | Action | Source     | Destination | Port | Description |
+|----------|--------|-----------|------------|------|------------|
+| 1 | BLOCK | HOME_NET | SERVERS_NET | ANY | Prevent access to servers |
+| 2 | BLOCK | HOME_NET | MGMT_NET | ANY | Prevent access to admin network |
+| 3 | BLOCK | HOME_NET | TEST_NET | ANY | Prevent access to test environment |
+| 4 | PASS | HOME_NET | WAN | ANY | Internet access |
+| - | DENY | HOME_NET | ANY | ANY | Implicit deny |
+
+---
+
+## IOT VLAN (192.168.40.0/24)
+
+**Purpose:** Untrusted / smart devices
+
+| Priority | Action | Source   | Destination | Port | Description |
+|----------|--------|---------|------------|------|------------|
+| 1 | BLOCK | IOT_NET | SERVERS_NET | ANY | Prevent access to servers |
+| 2 | BLOCK | IOT_NET | MGMT_NET | ANY | Prevent access to admin network |
+| 3 | PASS | IOT_NET | WAN | ANY | Internet access |
+| - | DENY | IOT_NET | ANY | ANY | Implicit deny |
+
+---
+
+## SERVERS VLAN (192.168.60.0/24)
+
+**Purpose:** Core infrastructure
+
+| Priority | Action | Source        | Destination | Port | Description |
+|----------|--------|--------------|------------|------|------------|
+| 1 | PASS | MGMT_NET    | SERVERS_NET | ANY | Administrative access |
+| 2 | PASS | SERVERS_NET | WAN         | ANY | Outbound connectivity (temporary) |
+| 3 | BLOCK | SERVERS_NET | TEST_NET    | ANY | Prevent access to test VLAN |
+| - | DENY | SERVERS_NET | ANY         | ANY | Implicit deny |
+
+---
+
+## SANDBOX VLAN (192.168.50.0/24)
+
+**Purpose:** Isolated malware testing environment
+
+| Priority | Action | Source       | Destination | Port | Description |
+|----------|--------|-------------|------------|------|------------|
+| 1 | PASS | MGMT_NET    | SANDBOX_NET | ANY | Admin access to sandbox |
+| 2 | BLOCK | SANDBOX_NET | SERVERS_NET | ANY | Prevent lateral movement |
+| - | DENY | SANDBOX_NET | ANY         | ANY | Full isolation (no internet) |
+
+---
+
+## Aliases Used
+
+### Network Aliases
+- `MGMT_NET` → 192.168.99.0/24  
+- `TEST_NET` → 192.168.20.0/24  
+- `HOME_NET` → 192.168.30.0/24  
+- `IOT_NET` → 192.168.40.0/24  
+- `SERVERS_NET` → 192.168.60.0/24  
+- `SANDBOX_NET` → 192.168.50.0/24  
+
+### Host Aliases
+- `SPLUNK_SERVER` → 192.168.60.10  
+- `AD_SERVER` → 192.168.60.20  
+- `NAS_SERVER` → 192.168.60.30  
+
+### Port Aliases
+- `SPLUNK_PORT` → 9997  
+- `AD_PORTS` → 53, 88, 135, 389, 445  
+
+---
+
+## Current Security Posture
+
+### Strengths
+- VLAN segmentation enforced
+- Critical infrastructure isolated
+- IoT network restricted
+- Sandbox environment contained
+
+### Known Gaps (Planned Improvements)
+- MGMT VLAN is overly permissive
+- SERVERS VLAN has unrestricted outbound access
+- WAN rules use broad "ANY" instead of port restrictions
+- No logging on deny rules yet
+- No IDS/IPS enabled
+
+---
+
+## Status
+
+- [x] Core segmentation implemented  
+- [x] Inter-VLAN control functioning  
+- [x] Aliases configured  
+- [ ] Hardening phase pending  
+- [ ] Logging + monitoring integration pending  
+
+---
+
+## Notes
+
+This configuration prioritizes **functionality first**, with a planned transition to **least privilege and full monitoring** in future iterations.

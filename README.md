@@ -1,72 +1,86 @@
-# Home Lab Documentation
+Enterprise-Grade Security Operations & Network Simulation Lab
+Project Overview
+This repository documents the architecture, implementation, and management of a multi-zone enterprise network simulation. The lab is designed to facilitate high-fidelity security research, malware analysis, and security operations center (SOC) workflow optimization.
 
-## Overview
-This repository documents my personal home lab environment designed to simulate an enterprise network with segmentation, monitoring, and security controls.
+By utilizing a dedicated hardware stack including pfSense, Cisco Layer 3 switching, and Windows Server 2022, this environment enforces strict network segmentation (VLANs) and centralized telemetry ingestion (Splunk).
 
-## Objectives
-- Build a segmented network using VLANs
-- Implement firewall rules and access control
-- Deploy SIEM for log monitoring
-- Simulate real-world cybersecurity scenarios
+Strategic Objectives
+Hardened Perimeter Defense: Deployment of pfSense with Suricata IDS/IPS for deep packet inspection and edge security.
 
-## Environment
-- Comcast Modem (Bridge Mode Planned)
-- Netgear Router
-- Layer 3 Switch
-- Windows 10 Pro Host (Hyper-V)
-- Kali Linux VM
-- Windows Server (Active Directory)
-- Splunk SIEM
+Network Segmentation & Zero Trust: Implementation of a 6-zone VLAN architecture to isolate malware and untrusted IoT devices from the production core.
 
-## Network Architecture
-                                           INTERNET
-                                               │
-                                 ┌──────────────────────────┐
-                                 │ Xfinity Gateway / Modem │
-                                 │ (Bridge Mode preferred) │
-                                 └────────────┬─────────────┘
-                                              │
-                                   WAN        │
-                              ┌───────────────▼───────────────┐
-                              │       pfSense Firewall        │
-                              │      + Suricata IDS/IPS       │
-                              └───────────────┬───────────────┘
-                                              │
-                                         LAN / TRUNK
-                                              │
-                              ┌───────────────▼───────────────┐
-                              │       Cisco L3 Switch         │
-                              │   VLANs / Inter-VLAN paths    │
-                              └──────┬────────┬────────┬──────┬────────┬────────┘
-                                     │        │        │      │        │
-                                 VLAN 10   VLAN 20  VLAN 25 VLAN 30 VLAN 40  VLAN 666
-                                Management   Home      IoT    Lab/SOC Guest    Malware
-                                   Admin    Trusted Untrusted Servers/Test Temp  Isolated
+Identity & Access Management (IAM): Centralized management of users, groups, and GPOs via Windows Server 2022 Active Directory.
 
-## VLAN Structure
-- VLAN 10 – Management
-- VLAN 20 – Home/Users
-- VLAN 30 – Lab/Servers
-- VLAN 666 – Malware Sandbox (Isolated)
+Enterprise Observability: Full-stack log aggregation from network nodes and endpoints into a Splunk SIEM for real-time detection engineering.
 
-## Security Controls
-- Network segmentation
-- Firewall rules
-- Least privilege model
-- Log monitoring with Splunk
+Hardware Specifications
+Perimeter Gateway: Qotom Q305p Mini PC (Intel Core i5) running pfSense.
 
-## Key Features
-- Malware sandbox environment
-- Phishing simulation lab (GoPhish)
-- Log analysis and alerting
-- Active Directory domain setup
+Core Switching: Cisco Catalyst 3560 Series L3 Switch (Inter-VLAN routing & ACLs).
 
-## Documentation Sections
-- Network Topology
-- VLAN Configuration
-- Firewall Rules
-- SIEM Setup
-- Procedures & Troubleshooting
+Identity/Management Server: Lenovo T480 (Windows Server 2022 / Hyper-V).
 
-## Status
-In progress – actively building and documenting
+SOC Endpoint: Windows 10 Pro (Hardened with Sysmon and Wireshark).
+
+Physical Media: 100ft Cat 6 UTP (ANSI/TIA-568.2-D compliant) for direct L2 visibility.
+
+Logical Network Architecture
+Plaintext
+                                       INTERNET
+                                           │
+                             ┌──────────────────────────┐
+                             │ Xfinity Gateway / Modem │
+                             │ (Bridge Mode preferred) │
+                             └────────────┬─────────────┘
+                                          │
+                               WAN        │
+                          ┌───────────────▼───────────────┐
+                          │       pfSense Firewall        │
+                          │      + Suricata IDS/IPS       │
+                          └───────────────┬───────────────┘
+                                          │
+                                     LAN / TRUNK
+                                          │
+                          ┌───────────────▼───────────────┐
+                          │       Cisco L3 Switch         │
+                          │   VLANs / Inter-VLAN paths    │
+                          └──────┬────────┬────────┬──────┬────────┬────────┘
+                                 │        │        │      │        │
+                             VLAN 10   VLAN 20  VLAN 25 VLAN 30 VLAN 40  VLAN 666
+                            Management   Home      IoT    Lab/SOC Guest    Malware
+                               Admin    Trusted Untrusted Servers/Test Temp  Isolated
+
+
+
+Security Zone Definitions
+VLAN 10 (Management): Critical infrastructure access; restricted to Admin physical ports.
+
+VLAN 20 (Home): Trusted user environment for daily operations.
+
+VLAN 25 (IoT): Untrusted smart devices; isolated from all internal zones.
+
+VLAN 30 (Lab/SOC): Primary testing environment; direct switch connectivity for SPAN/Mirror port packet ingestion.
+
+VLAN 40 (Guest): Time-limited, temporary wireless access.
+
+VLAN 666 (Malware): Maximum isolation; no transit paths to internal zones or WAN.
+
+Governance & Documentation
+This project follows a professional Change Management framework. All infrastructure modifications are tracked via audit logs and version-controlled pull requests.
+
+Change Management: Formal audit trail of network and server modifications.
+
+Troubleshooting: Root-cause analysis and resolution logs for hardware/software incidents.
+
+Procedures: Standard Operating Procedures (SOPs) for environment scaling and incident response.
+
+Implementation Status
+Phase 1: Physical & Logical Core: ✅ VLAN Schema defined; pfSense/Cisco integration verified.
+
+Phase 2: Identity & Endpoints: 🔄 Active Directory promotion and Test PC domain-joining (In Progress).
+
+Phase 3: Visibility & Monitoring: ⏳ Splunk Universal Forwarder deployment and Suricata rule tuning.
+
+Status: Active Build Phase
+
+Last Major Update: April 2026 - Topology re-routed for direct L2 switch integration of the SOC node.
