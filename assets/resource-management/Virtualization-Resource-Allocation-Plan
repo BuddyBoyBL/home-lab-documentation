@@ -1,0 +1,271 @@
+# 
+
+## Overview
+
+This document defines the current and planned resource allocation strategy for the homelab virtual machine environment.
+
+The goal is to balance:
+- performance
+- stability
+- resource efficiency
+- virtualization flexibility
+- long-term scalability
+
+while operating within current hardware limits.
+
+---
+
+# Host System Information
+
+## Primary Virtualization Host
+
+| Component | Specification |
+|---|---|
+| System | Lenovo 80SV |
+| CPU | Intel Core i7-7500U @ 2.70GHz |
+| Cores / Threads | 2 Cores / 4 Threads |
+| Installed RAM | 20 GB |
+| Usable RAM | 19.9 GB |
+| Storage | 2 TB Internal Storage (~1.8 TB usable) |
+| Operating System | Windows 10 |
+| Architecture | 64-bit |
+| BIOS Mode | UEFI |
+| Secure Boot | Enabled |
+
+---
+
+# Current Virtual Machine Allocation Plan
+
+| System | RAM Allocation | Dynamic Memory | Purpose |
+|---|---|---|---|
+| Sandbox/Test Environment | 2 GB | Adjustable as needed | Lightweight testing and validation |
+| Splunk Server | 6-7 GB | Enabled | SIEM, log analysis, monitoring |
+| Client PC VM | 4 GB | Optional | Endpoint simulation and testing |
+| Active Directory Domain Controller | 2-4 GB | Enabled if needed | Authentication, DNS, Group Policy |
+| Cloud / Storage Server | 2 GB | Enabled | Lightweight storage and cloud experimentation |
+
+---
+
+# Current Resource Strategy
+
+## Conservative Allocation Philosophy
+
+Virtual machines are intentionally configured with lower memory allocations during the current phase of development.
+
+This approach allows:
+- improved host responsiveness
+- better workload balancing
+- reduced resource waste
+- easier troubleshooting
+- flexible scaling as infrastructure grows
+
+---
+
+# Infrastructure Design Notes
+
+## Sandbox / Test Environment
+
+### Current Allocation
+- 2 GB RAM
+
+### Purpose
+- configuration testing
+- VLAN validation
+- management experimentation
+- connectivity troubleshooting
+- isolated testing
+
+### Notes
+The sandbox environment is intentionally lightweight during the current infrastructure phase.
+
+Memory allocations will increase only when testing requirements justify additional resources.
+
+---
+
+## Splunk Server
+
+### Current Allocation
+- 6-7 GB RAM
+- Dynamic memory enabled
+
+### Purpose
+- SIEM functionality
+- log aggregation
+- dashboard testing
+- event monitoring
+- Sysmon and endpoint log analysis
+
+### Planned Future Improvements
+- Migration from Windows deployment to Ubuntu Server
+- Improved indexing efficiency
+- Long-term storage integration with NAS
+
+### Notes
+Splunk represents the heaviest current workload within the virtualized environment.
+
+The current RAM allocation is considered sufficient for:
+- learning
+- moderate log ingestion
+- dashboard testing
+- infrastructure monitoring
+
+---
+
+## Client PC VM
+
+### Current Allocation
+- 4 GB RAM
+
+### Purpose
+- endpoint simulation
+- user activity testing
+- Active Directory interaction
+- Group Policy validation
+- phishing simulation testing
+
+### Notes
+The client VM is intended to simulate realistic workstation behavior inside segmented VLAN environments.
+
+---
+
+## Active Directory Domain Controller
+
+### Current Allocation
+- 2-4 GB RAM
+- Dynamic memory enabled if necessary
+
+### Purpose
+- centralized authentication
+- DNS services
+- Group Policy management
+- user and domain administration
+
+### Notes
+The domain controller workload remains relatively lightweight within the current homelab environment.
+
+---
+
+## Cloud / Storage Server
+
+### Current Allocation
+- 2 GB RAM
+- Dynamic memory enabled
+
+### Purpose
+- lightweight storage services
+- cloud experimentation
+- file-sharing testing
+- future Nextcloud experimentation
+
+### Notes
+Current storage-related workloads remain intentionally conservative while infrastructure architecture is still evolving.
+
+---
+
+# Estimated Resource Usage
+
+| Workload Type | Estimated Resource Impact |
+|---|---|
+| Basic Testing | Low |
+| Splunk Monitoring | Moderate |
+| Multiple Simultaneous VMs | Moderate to High |
+| Active Directory Services | Low |
+| NAS / Storage Services | Low to Moderate |
+
+---
+
+# Dynamic Memory Strategy
+
+Dynamic memory is enabled selectively to:
+- improve overall host stability
+- reduce idle memory consumption
+- support temporary workload spikes
+- maintain system responsiveness
+
+Dynamic allocation will continue to be adjusted based on:
+- workload behavior
+- logging volume
+- virtualization expansion
+- future monitoring growth
+
+---
+
+# Storage and Logging Considerations
+
+## Current Storage Strategy
+
+### Primary Storage
+- Internal 2 TB laptop storage
+- NAS storage integration
+- External backup storage
+
+### Logging Strategy
+- Splunk hot data stored locally during active processing
+- Long-term storage intended for NAS integration
+- Backup retention through external storage devices
+
+---
+
+# Current Operational Philosophy
+
+The current virtualization strategy prioritizes:
+- learning
+- flexibility
+- stability
+- modular scaling
+- efficient hardware utilization
+
+The infrastructure is intentionally designed around:
+- realistic budget constraints
+- staged hardware upgrades
+- enterprise-inspired segmentation
+- operational experimentation
+
+---
+
+# Planned Future Improvements
+
+## Virtualization Improvements
+- Refined dynamic memory tuning
+- Expanded VLAN testing
+- Additional endpoint simulations
+- Linux-based Splunk deployment
+
+---
+
+## Hardware Improvements
+- Future NAS-grade storage drives
+- Expanded cooling if required
+- Additional segmented wireless infrastructure
+- Long-term 24/7 optimization
+
+---
+
+# Current Status
+
+- [x] Initial virtualization environment established
+- [x] Resource allocation strategy defined
+- [x] Splunk environment operational
+- [x] VLAN testing active
+- [x] NAS integration planned
+- [ ] Linux migration completed
+- [ ] Advanced optimization completed
+- [ ] Long-term workload tuning finalized
+
+---
+
+# Notes
+
+This resource allocation strategy is intentionally modular and adaptive.
+
+Current allocations are optimized for:
+- learning environments
+- manageable workloads
+- efficient RAM utilization
+- stable virtualization performance
+
+Resource allocations are expected to evolve as:
+- monitoring increases
+- infrastructure expands
+- logging volume grows
+- additional services are deployed
