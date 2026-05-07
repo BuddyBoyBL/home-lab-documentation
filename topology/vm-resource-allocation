@@ -1,0 +1,122 @@
+# VM Resource Allocation
+
+## Overview
+
+This document tracks the current and planned resource allocation for virtual machines within the home lab environment.
+
+The goal is to balance:
+- system performance
+- virtualization stability
+- realistic enterprise-style separation
+- future scalability
+
+Host system resources may be adjusted over time as the environment grows.
+
+---
+
+# Host System
+
+| System | Specification |
+|---|---|
+| Host Device | Lenovo ThinkPad X1 Extreme Gen 2 |
+| Operating System | Windows 11 Pro |
+| Total RAM | 32 GB |
+| Storage | ~1.5–2 TB SSD |
+| Primary Role | Admin workstation + Hypervisor host |
+
+---
+
+# Current Virtual Machine Plan
+
+| VM Name | Role | Planned VLAN | Operating System | RAM | CPU | Storage | Status |
+|---|---|---|---|---|---|---|---|
+| Domain Controller | Active Directory / DNS | VLAN 60 | Windows Server | 4 GB | 2 vCPU | 80–100 GB | Planned |
+| Splunk Server | SIEM / Log Aggregation | VLAN 60 | Ubuntu or Windows | 8 GB | 4 vCPU | 100–150 GB | Planned |
+| Windows Client | Domain-Joined Endpoint | VLAN 20 | Windows 10/11 | 4 GB | 2 vCPU | 60–80 GB | Planned |
+| Kali Linux | Security Testing VM | VLAN 20 | Kali Linux | 4 GB | 2 vCPU | 40–60 GB | Planned |
+| Sandbox VM | Malware Analysis / Isolation | VLAN 50 | TBD | 2–4 GB | 2 vCPU | TBD | Future |
+
+---
+
+# Planned Resource Usage
+
+| Resource | Estimated Allocation |
+|---|---|
+| Total Planned VM RAM | ~20–24 GB |
+| Remaining Host RAM | ~8–12 GB |
+| Virtualization Goal | Maintain stable host performance while supporting multiple concurrent VMs |
+
+---
+
+# Physical Systems
+
+| Device | Role | Notes |
+|---|---|---|
+| Dell Inspiron 660s | Test PC | Physical lab endpoint |
+| Qotom Mini PC | pfSense Firewall | Dedicated firewall appliance |
+| QNAP NAS | Storage / Backup | Planned centralized storage |
+
+---
+
+# Resource Allocation Strategy
+
+## Domain Controller
+The domain controller is intended to remain lightweight and stable. Resource usage is expected to stay relatively low unless additional Windows Server roles are added later.
+
+---
+
+## Splunk Server
+Splunk is expected to be the most resource-intensive VM due to indexing, log ingestion, and dashboard activity. Additional RAM may be allocated later depending on logging volume.
+
+---
+
+## Windows Client
+The Windows client VM is intended to simulate a standard enterprise workstation for:
+- domain integration
+- GPO testing
+- endpoint logging
+- troubleshooting
+
+---
+
+## Kali Linux
+Kali Linux is intended for:
+- network testing
+- enumeration
+- packet analysis
+- security tooling practice
+
+---
+
+## Sandbox VM
+The sandbox environment is reserved for future isolated malware analysis and high-risk testing after segmentation and monitoring are fully validated.
+
+---
+
+# Current Notes
+
+- Splunk is intentionally hosted in a dedicated VM rather than directly on the host OS
+- The host laptop primarily functions as:
+  - admin workstation
+  - hypervisor host
+  - management access point
+- Additional VMs may be added later as resources and infrastructure expand
+- VM resource allocation may be adjusted as performance testing continues
+
+---
+
+# Status
+
+- [ ] Hypervisor finalized
+- [ ] Domain Controller VM deployed
+- [ ] Splunk VM deployed
+- [ ] Windows Client VM deployed
+- [ ] Kali Linux VM deployed
+- [ ] Sandbox VM reserved
+- [ ] Resource monitoring baseline established
+
+---
+
+# Summary
+
+This virtualization plan is intended to support a segmented enterprise-style home lab while maintaining stable host performance and clear separation between infrastructure, clients, security tooling, and future sandbox environments.
