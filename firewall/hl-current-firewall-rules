@@ -33,7 +33,7 @@ Rules are organized by VLAN and follow a top-down evaluation model (first match 
 | Priority | Action | Source     | Destination      | Port            | Description |
 |----------|--------|-----------|-----------------|-----------------|------------|
 | 1 | PASS | TEST_NET | SPLUNK_SERVER | SPLUNK_PORT (9997) | Log forwarding |
-| 2 | PASS | TEST_NET | AD_SERVER     | AD_PORTS        | Domain services |
+| 2 | PASS | TEST_NET | AD_SERVER     | (TEMP ALL)        | Domain services |
 | 3 | PASS | TEST_NET | WAN           | ANY             | Internet access |
 | - | DENY | TEST_NET | ANY           | ANY             | Implicit deny |
 
