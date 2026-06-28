@@ -1,224 +1,224 @@
+# Home Lab Network Topology (Current State)
+
+```text
 INTERNET
    │
 ┌──────────────────────────┐
-│ Xfinity Gateway / Modem │
-│ (Legacy Network Active) │
+│ Xfinity Gateway / Modem  │
+│ (Legacy Network Active)  │
 └────────────┬─────────────┘
              │
    Ethernet Run (Upstairs → Basement)
              │
         WAN  │
 ┌────────────▼─────────────┐
-│     pfSense Firewall     │
+│    OPNsense Firewall     │
 │   (Qotom Mini PC)        │
 │   VLAN Gateways:         │
 │   99 / 60 / 30 / 20 / 40 / 50 │
+│   Routing / NAT / DHCP / DNS │
 └────────────┬─────────────┘
              │
-        LAN / TRUNK
+        LAN / TRUNK (GE1, all VLANs tagged)
              │
 ┌────────────▼─────────────┐
-│    Cisco L2 Switch       │
+│   Cisco SG300 L2 Switch  │
 │   VLAN Distribution      │
+│   (Layer 2 access only)  │
 └──────┬──────┬──────┬─────┬──────┬──────┘
-       │      │      │     │      │
        │      │      │     │      │
    VLAN 99 VLAN 60 VLAN 30 VLAN 20 VLAN 40 VLAN 50
   Management Servers  Home   Test    IoT   Sandbox
    Control   Core     Users  Lab     Low   Isolated
              Services         Clients Trust
+```
 
-VLAN 99 — MANAGEMENT
+---
 
-────────────────────────────────────────────────────────────────────────
-Subnet: 192.168.99.0/24
-Gateway: 192.168.99.1
+## Architecture Model
 
-Purpose:
+- **Switch (Cisco SG300)** = Layer 2 segmentation only
+- **Firewall (OPNsense)** = Layer 3 routing, NAT, DHCP, DNS, and inter-VLAN policy
+- **Single trunk uplink (GE1)** carries all tagged VLAN traffic to the firewall
 
-Administrative control plane
+---
 
-Devices:
+## VLAN 99 — MANAGEMENT
+- **Subnet:** 192.168.99.0/24
+- **Gateway:** 192.168.99.1
+- **Purpose:** Administrative control plane
 
-Admin laptop (192.168.99.10)
-Cisco switch (192.168.99.2)
-pfSense management interface
+**Devices:**
+- Admin laptop (192.168.99.10)
+- Cisco switch management (192.168.99.2)
+- OPNsense management interface
 
-Access idea:
+**Access model:**
+- Full administrative access to infrastructure
+- Can access all VLANs when required
+- No inbound access from other VLANs
+- Note: OPNsense management UI is reachable only from physically assigned management ports (intentional hardening)
 
-Full administrative access to infrastructure
-Can access all VLANs when required
-No inbound access from other VLANs
-VLAN 60 — SERVERS
+---
 
-────────────────────────────────────────────────────────────────────────
-Subnet: 192.168.60.0/24
-Gateway: 192.168.60.1
+## VLAN 60 — SERVERS
+- **Subnet:** 192.168.60.0/24
+- **Gateway:** 192.168.60.1
+- **Purpose:** Core infrastructure and services
 
-Purpose:
+**Systems:**
+- Domain Controller — Active Directory / DNS (192.168.60.10) — *operational*
+- Splunk Server — SIEM (192.168.60.20) — *operational, running on dedicated VM*
 
-Core infrastructure and services
+**Access model:**
+- Accessible from management VLAN
+- Provides services (AD, Splunk) to lab VLAN
+- No direct access from IoT or sandbox
+- Limited exposure to home VLAN
 
-Systems:
+> **Note:** QNAP NAS (formerly planned at 192.168.60.30) was removed and returned due to confirmed hardware failure. Storage role is currently unassigned pending a replacement solution.
 
-Domain Controller (192.168.60.10)
-Splunk Server (192.168.60.20)
-QNAP NAS (192.168.60.30)
+---
 
-Access idea:
+## VLAN 30 — HOME NETWORK
+- **Subnet:** 192.168.30.0/24
+- **Gateway:** 192.168.30.1
+- **Purpose:** Controlled household network (transition from legacy)
 
-Accessible from management VLAN
-Provides services to lab VLAN
-No direct access from IoT or sandbox
-Limited exposure to home VLAN
-VLAN 30 — HOME NETWORK
+**Devices:**
+- TP-Link router (AP mode)
+- Smart TV (temporary placement)
+- Future migrated family devices
 
-────────────────────────────────────────────────────────────────────────
-Subnet: 192.168.30.0/24
-Gateway: 192.168.30.1
+**Access model:**
+- Internet access allowed
+- No access to management VLAN
+- No access to sandbox VLAN
+- Blocked from servers and test VLANs (per current firewall rules)
 
-Purpose:
+---
 
-Controlled household network (transition from legacy)
+## VLAN 20 — TEST / LAB CLIENT NETWORK
+- **Subnet:** 192.168.20.0/24
+- **Gateway:** 192.168.20.1
+- **Purpose:** Lab endpoint environment
 
-Devices:
+**Devices:**
+- Test PC (Dell Inspiron) — *domain-joined, active; Splunk Universal Forwarder installed and running*
+- Windows Client VM
+- Kali Linux VM (planned)
+- Test printer
+- Test phone (planned)
 
-TP-Link router (AP mode)
-Smart TV (temporary placement)
-Future migrated family devices
+**Access model:**
+- Internet access allowed (controlled)
+- Access to server VLAN for AD and Splunk (log forwarding on 9997, domain services)
+- No access to home VLAN
+- No access to management VLAN
 
-Access idea:
+---
 
-Internet access allowed
-No access to management VLAN
-No access to sandbox VLAN
-Limited access to servers only if needed
-VLAN 20 — TEST / LAB CLIENT NETWORK
+## VLAN 40 — IOT NETWORK
+- **Subnet:** 192.168.40.0/24
+- **Gateway:** 192.168.40.1
+- **Purpose:** Low-trust smart devices
 
-────────────────────────────────────────────────────────────────────────
-Subnet: 192.168.20.0/24
-Gateway: 192.168.20.1
+**Devices:**
+- Smart bulbs
+- Air purifier
+- Ring doorbell
+- Wi-Fi extender
+- IoT router/AP
 
-Purpose:
+**Access model:**
+- Internet access only
+- No access to internal VLANs
+- Fully isolated from servers and management
 
-Lab endpoint environment
+---
 
-Devices:
+## VLAN 50 — SANDBOX / MALWARE ZONE
+- **Subnet:** 192.168.50.0/24
+- **Gateway:** 192.168.50.1
+- **Purpose:** High-risk testing environment
 
-Test PC (Dell Inspiron)
-Windows Client VM
-Kali Linux VM
-Test printer
-Test phone (planned)
+**Systems:**
+- Sandbox VM (planned)
+- Malware analysis systems (future)
 
-Access idea:
+**Access model:**
+- No access to any internal VLANs
+- No internet initially
+- Future: controlled fake internet (INetSim)
+- Fully isolated and monitored
 
-Internet access allowed (controlled)
-Access to server VLAN (AD, Splunk)
-No access to home VLAN
-No access to management VLAN
-VLAN 40 — IOT NETWORK
+---
 
-────────────────────────────────────────────────────────────────────────
-Subnet: 192.168.40.0/24
-Gateway: 192.168.40.1
+## TRAFFIC FLOW MODEL
 
-Purpose:
-
-Low-trust smart devices
-
-Devices:
-
-Smart bulbs
-Air purifier
-Ring doorbell
-Wi-Fi extender
-IoT router/AP
-
-Access idea:
-
-Internet access only
-No access to internal VLANs
-Fully isolated from servers and management
-VLAN 50 — SANDBOX / MALWARE ZONE
-
-────────────────────────────────────────────────────────────────────────
-Subnet: 192.168.50.0/24
-Gateway: 192.168.50.1
-
-Purpose:
-
-High-risk testing environment
-
-Systems:
-
-Sandbox VM (planned)
-Malware analysis systems (future)
-
-Access idea:
-
-No access to any internal VLANs
-No internet initially
-Future: controlled fake internet (INetSim)
-Fully isolated and monitored
-TRAFFIC FLOW MODEL
-
-────────────────────────────────────────────────────────────────────────
-
+```text
     [Home VLAN] --------\
                          \
-    [IoT VLAN] ---------- > pfSense Firewall ---> Internet
+    [IoT VLAN] ---------- > OPNsense Firewall ---> Internet
                          /
     [Lab VLAN] ----------/
 
-    [Servers VLAN] ---> provides services (AD, Splunk, NAS)
+    [Servers VLAN] ---> provides services (AD, Splunk)
 
     [Management VLAN] ---> controls all infrastructure
 
     [Sandbox VLAN] ---> isolated (no trust, no access)
-VM / INFRASTRUCTURE LAYER
+```
 
-────────────────────────────────────────────────────────────────────────
+---
 
-Host: Admin Laptop (Hypervisor)
+## VM / INFRASTRUCTURE LAYER
 
-Runs:
+**Host:** Admin Laptop (Lenovo ThinkPad X1 Extreme Gen 2 — Hyper-V)
 
-Domain Controller (VLAN 60)
-Splunk Server (VLAN 60)
-Windows Client VM (VLAN 20)
-Kali Linux VM (VLAN 20)
-Future Sandbox VM (VLAN 50)
-CURRENT STATE NOTES
+**Runs:**
+- Domain Controller (VLAN 60) — *operational*
+- Splunk Server (VLAN 60) — *operational*
+- Windows Client VM (VLAN 20)
+- Kali Linux VM (VLAN 20) — *planned*
+- Sandbox VM (VLAN 50) — *future*
 
-────────────────────────────────────────────────────────────────────────
+---
 
-VLANs configured on pfSense
-Basic firewall rules applied
-Cisco switch being reconfigured
-Connectivity testing in progress
-Legacy network (192.168.1.0/24) still active upstairs
-Smart TV temporarily placed on home VLAN for usability
-DESIGN PRINCIPLES
+## CURRENT STATE NOTES
 
-────────────────────────────────────────────────────────────────────────
+- OPNsense deployed and operational (migrated from original pfSense plan)
+- VLANs configured on OPNsense; baseline firewall rules applied and enforcing segmentation
+- Cisco SG300 operational as Layer 2 access switch; trunk stable, VLAN-to-port mapping documented
+- DHCP working per-VLAN (Kea DHCP; resolved earlier Dnsmasq conflict)
+- Active Directory operational; test PC domain-joined
+- Splunk running on dedicated VM; Universal Forwarder installed on test PC
+- Legacy network (192.168.1.0/24) still active upstairs
+- Smart TV temporarily placed on home VLAN for usability
 
-Segmentation by trust level
-Default deny between VLANs
-Centralized control via pfSense
-Servers isolated from clients
-IoT treated as untrusted
-Sandbox treated as hostile
-SUMMARY
+---
 
-────────────────────────────────────────────────────────────────────────
+## DESIGN PRINCIPLES
 
-This topology represents a segmented homelab architecture with:
+- Segmentation by trust level
+- Default deny between VLANs
+- Centralized control and routing via OPNsense
+- Servers isolated from clients
+- IoT treated as untrusted
+- Sandbox treated as hostile
+- Switch handles segmentation; firewall handles policy (separation of concerns)
 
-Dedicated firewall (pfSense)
-VLAN-based network segmentation
-Separate server, client, and IoT networks
-Centralized logging and identity services
-Isolated sandbox environment (planned)
+---
 
-This is the current build-state topology and will evolve as connectivity and firewall policies are finalized.
+## SUMMARY
+
+This topology represents a segmented home lab architecture with:
+
+- Dedicated firewall (OPNsense)
+- VLAN-based network segmentation across 6 zones
+- Separate server, client, IoT, and management networks
+- Centralized logging (Splunk) and identity services (Active Directory) — operational
+- Isolated sandbox environment (planned)
+
+The core network is in a stable, operational state. The environment will continue to evolve as monitoring/detection (Splunk dashboards, Sysmon, IDS/IPS), the sandbox zone, and firewall hardening are finalized.
+```
