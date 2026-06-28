@@ -1,0 +1,386 @@
+Splunk Enterprise & Universal Forwarder Deployment
+
+Overview
+
+This document covers the complete deployment of Splunk Enterprise as a centralized SIEM and Universal Forwarders on endpoint machines within the homelab environment.
+
+Current Implementation:
+
+
+Splunk Server: 192.168.60.20 (VLAN 60 - Servers)
+Receiving Port: 9997
+Active Forwarders: 4 machines
+Status: Operational — basic dashboard active
+
+
+
+Architecture
+
+Topology
+
+┌─────────────────────────────────────────────────────────┐
+│                    Splunk Enterprise                     │
+│              192.168.60.20:8000 (Web UI)                │
+│              192.168.60.20:9997 (Data Receiver)         │
+│                 VLAN 60 - Servers                        │
+└─────────────────────────────────────────────────────────┘
+                            ▲
+                            │ (TCP/9997)
+         ┌──────────────────┼──────────────────┐
+         │                  │                  │
+    ┌────────────┐  ┌──────────────┐  ┌─────────────┐
+    │  Test PC   │  │ Domain Ctrl  │  │Windows CLI  │
+    │ (Physical) │  │    VM        │  │   VM        │
+    │ VLAN 20    │  │  VLAN 60     │  │ VLAN 20     │
+    │ Forwarder  │  │ Forwarder    │  │ Forwarder   │
+    └────────────┘  └──────────────┘  └─────────────┘
+         
+    ┌─────────────────────┐
+    │ Management Laptop   │
+    │    (Host)           │
+    │ VLAN 99 / Hypervisor│
+    │ Forwarder           │
+    └─────────────────────┘
+
+Data Flow
+
+
+Endpoint machines (Test PC, DC VM, Client VM, Management Laptop) collect Windows Event logs
+Universal Forwarders on each machine forward logs to Splunk receiver (9997)
+Splunk Indexer receives, parses, and indexes logs into searchable index
+Splunk Web UI (8000) provides search and visualization interface
+
+
+
+Splunk Server Installation
+
+Host Machine
+
+
+OS: Ubuntu (or Windows Server — adapt accordingly)
+IP: 192.168.60.20
+VLAN: 60 (Servers)
+RAM: 8 GB (minimum recommended)
+Storage: 100+ GB for indexing
+
+
+Installation Steps
+
+
+Download Splunk Enterprise: https://www.splunk.com/en_US/download/splunk-enterprise.html
+Install on server machine (follow platform-specific installer)
+Start Splunk service
+Access web UI: https://192.168.60.20:8000
+Default credentials: admin / changeme (change immediately)
+
+
+Enable Data Receiving
+
+In Splunk Web:
+
+
+Navigate to Settings → Forwarding and receiving → Receive data
+Click New Receiving Port
+Set port to 9997
+Click Save
+
+
+Verify listening:
+
+From any machine on the network:
+
+telnet 192.168.60.20 9997
+
+Should connect without error.
+
+
+Universal Forwarder Deployment
+
+Overview
+
+The Universal Forwarder is a lightweight agent installed on endpoint machines that:
+
+
+Collects local Windows Event logs
+Forwards logs to centralized Splunk indexer
+Runs as a system service (automatic startup)
+Requires minimal resources
+
+
+Supported Machines
+
+MachineOSVLANRoleStatusTest PCWindows 10/1120Physical endpoint✓ ActiveDomain ControllerWindows Server60Identity/Auth logs✓ ActiveWindows Client VMWindows 10/1120Endpoint simulation✓ ActiveManagement LaptopWindows 1199Host/Admin access✓ Active
+
+Installation Process
+
+Step 1: Download Forwarder
+
+On a machine with internet access (Admin Laptop):
+
+
+Go to: https://www.splunk.com/en_US/download/universal-forwarder.html
+Select Windows 64-bit (most common)
+Download .msi installer
+
+
+Step 2: Transfer to Target Machine
+
+Option A: USB Drive (for isolated networks)
+
+
+Copy .msi to USB
+Plug into target machine
+Run installer from USB
+
+
+Option B: Network Share (preferred for lab)
+
+
+Create shared folder on admin laptop: C:\Splunk-Share
+Copy .msi to shared folder
+On target machine, map network drive to \\ADMIN-LAPTOP-NAME\Splunk-Share
+Run installer from mapped drive
+
+
+Step 3: Run Installer
+
+
+Run .msi as Administrator
+Follow installation wizard
+When prompted for Receiving Indexer:
+
+Hostname or IP: 192.168.60.20
+Port: 9997
+
+
+
+Create admin credentials (or use "Generate random password")
+Complete installation
+
+
+Service starts automatically.
+
+Step 4: Verify Installation
+
+On target machine, open Command Prompt as Administrator:
+
+cd "C:\Program Files\SplunkUniversalForwarder\bin"
+splunkd.exe list forward-server
+
+Expected output:
+
+192.168.60.20:9997
+
+If correct, forwarder is configured and running.
+
+
+Configuring Log Collection
+
+Basic Windows Event Logs
+
+By default, the forwarder collects basic Windows logs. To configure additional event sources:
+
+File location (on each forwarder):
+
+C:\Program Files\SplunkUniversalForwarder\etc\system\local\inputs.conf
+
+Basic configuration to collect System, Security, and Application logs:
+
+[WinEventLog://System]
+disabled = 0
+index = main
+
+[WinEventLog://Security]
+disabled = 0
+index = main
+
+[WinEventLog://Application]
+disabled = 0
+index = main
+
+To apply changes:
+
+net stop SplunkForwarder
+net start SplunkForwarder
+
+Wait 30-60 seconds for logs to index.
+
+
+Verification & Troubleshooting
+
+Verify Data Flow in Splunk
+
+In Splunk Web (192.168.60.20:8000):
+
+
+Go to Search & Reporting
+Search: index=_internal group=queue
+Set time range to Last 24 hours
+Click Search
+
+
+Expected: Events showing forwarder connections and data flow
+
+Search for actual Windows events:
+
+index=main
+
+Expected: Windows System, Security, and Application logs from all forwarders
+
+Troubleshooting Checklist
+
+IssueCheckSolutionForwarder not connectingIs Splunk listening on 9997?netstat -an | findstr 9997 on Splunk serverNo events in SplunkIs forwarder running?sc query SplunkForwarder or check ServicesWrong IP configuredVerify forwarder configsplunkd.exe list forward-serverNetwork connectivityPing Splunk from forwarderping 192.168.60.20Firewall blockingCheck network rulesVerify VLAN firewall allows 192.168.60.20:9997
+
+
+Splunk Web Dashboard
+
+Lab Overview Dashboard
+
+Location: Dashboards → Lab Overview
+
+Panels:
+
+Panel 1: Event Count Over Time
+
+
+Search: index=_internal
+Visualization: Line Chart
+Time Range: Last 24 hours
+Purpose: Shows data ingestion volume over time
+
+
+Panel 2: Events by Host
+
+
+Search: index=_internal | stats count by host
+Visualization: Bar Chart
+Time Range: Last 24 hours
+Purpose: Identifies which machines are generating most logs
+
+
+Panel 3: Recent Events
+
+
+Search: index=_internal
+Visualization: Table
+Time Range: Last 1 hour
+Purpose: Shows latest log entries for quick status check
+
+
+Accessing Dashboard
+
+
+Open Splunk Web: https://192.168.60.20:8000
+Log in (admin credentials)
+Click Dashboards (top navigation)
+Select Lab Overview
+
+
+
+Security Considerations
+
+Current Implementation (Lab Only)
+
+⚠️ For a lab environment, the following are simplified for ease of use:
+
+
+Default Splunk admin credentials (change from changeme)
+HTTP traffic (HTTPS recommended for production)
+No encryption on forwarded data (TLS recommended for production)
+Broad firewall rules (should be restricted to specific IPs)
+All forwarders use same credentials
+
+
+Hardening (Future Phase)
+
+When transitioning to production-like configuration:
+
+
+Use SSL/TLS for data transmission (9997)
+Restrict firewall to specific forwarder IPs
+Unique credentials per forwarder
+Role-based access control in Splunk
+Enable Splunk authentication (LDAP/AD integration)
+Monitor forwarder health and connectivity
+Implement log retention policies
+
+
+
+Next Steps
+
+Phase 1: Expansion (Current)
+
+
+ Install forwarder on additional client machines
+ Collect Sysmon events (process creation, network connections)
+ Add Advanced Sysmon event types to dashboard
+
+
+Phase 2: Integration (Planned)
+
+
+ Active Directory log integration
+ Group Policy deployment of forwarders
+ Automated detection rules for security events
+
+
+Phase 3: Advanced (Future)
+
+
+ Custom data inputs (firewall logs, IDS/IPS)
+ Alert rules (failed logons, suspicious processes)
+ Correlation searches (multi-event detection)
+ Knowledge base (field extractions, tags)
+
+
+
+References
+
+Official Documentation
+
+
+Splunk Enterprise: https://docs.splunk.com/Documentation/Splunk/latest/Admin/Welcome
+Universal Forwarder: https://docs.splunk.com/Documentation/Forwarder/latest/Forwarder/Abouttheuniversalforwarder
+Forwarding Data: https://docs.splunk.com/Documentation/Splunk/latest/Forwarding/Aboutforwarding
+
+
+Lab Resources
+
+
+Network Topology: See topology/ directory
+Firewall Rules: See firewall/ directory
+VM Configuration: See topology/vm-resource-allocation
+
+
+
+Current Status
+
+
+ComponentStatusVersionSplunk Enterprise✓ Running9.xReceiving Port✓ Active9997Test PC Forwarder✓ ConnectedLatestDC VM Forwarder✓ ConnectedLatestClient VM Forwarder✓ ConnectedLatestManagement Laptop Forwarder✓ ConnectedLatestLab Overview Dashboard✓ Operationalv1.0Windows Event Collection✓ ActiveSystem/Security/Application
+
+
+Notes
+
+
+Splunk indexing starts immediately upon data receipt
+Historical logs are indexed; searches can go back to earliest receipt time
+Dashboard refresh rate: real-time (updates as data arrives)
+Log retention: Splunk default (check Settings for specific policy)
+Forwarder auto-starts on machine reboot
+
+
+
+Change Log
+
+DateChangeAuthor2026-06-28Initial Splunk deployment with 4 forwardersLabLab Overview dashboard createdLabWindows Event Log collection configuredLab
+
+
+Contact & Support
+
+For issues with Splunk in this lab environment:
+
+
+Check troubleshooting section above
+Verify forwarder connectivity: splunkd.exe list forward-server
+Review Splunk logs: C:\Program Files\Splunk\var\log\splunk\
+Consult official Splunk documentation
